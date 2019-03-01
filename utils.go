@@ -53,7 +53,7 @@ func NewLogger(loggerName, basePath string) AppLogger {
     logger := logger{
         loggerName: loggerName,
     }
-    logger.filePath, _ = filepath.Abs(fmt.Sprintf("./%s/%s", basePath, loggerName))
+    logger.filePath, _ = filepath.Abs(fmt.Sprintf("%s/%s", basePath, loggerName))
     logger.updateFileDate()
 
     logger.DEBUG = log.Logger{}
