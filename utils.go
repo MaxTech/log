@@ -10,11 +10,13 @@ import (
     "time"
 )
 
+type LogFlag string
+
 const (
-    DEBUG = "Debug"
-    INFO  = "Info"
-    WARN  = "Warn"
-    ERROR = "Error"
+    DEBUG LogFlag = "Debug"
+    INFO  LogFlag = "Info"
+    WARN  LogFlag = "Warn"
+    ERROR LogFlag = "Error"
 )
 
 var logFlagMap = map[LogFlag]int{
@@ -23,8 +25,6 @@ var logFlagMap = map[LogFlag]int{
     WARN:  3,
     ERROR: 4,
 }
-
-type LogFlag string
 
 func (lf LogFlag) Code() int {
     return logFlagMap[lf]
@@ -49,11 +49,11 @@ type logger struct {
     WARN       log.Logger
 }
 
-func NewLogger(loggerName, basePath string) AppLogger {
+func NewLogger(loggerName string) AppLogger {
     logger := logger{
         loggerName: loggerName,
     }
-    logger.filePath, _ = filepath.Abs(fmt.Sprintf("%s/%s", basePath, loggerName))
+    logger.filePath, _ = filepath.Abs(fmt.Sprintf("./logs/%s", loggerName))
     logger.updateFileDate()
 
     logger.DEBUG = log.Logger{}
@@ -150,7 +150,7 @@ func (l *logger) getFlagFilePath(flag string) string {
     return flagFilePath
 }
 
-func (l *logger) doOutPut(logger log.Logger, writer io.Writer, logString string)  {
+func (l *logger) doOutPut(logger log.Logger, writer io.Writer, logString string) {
     logger.SetOutput(writer)
     _ = logger.Output(2, fmt.Sprintf("\t%s", logString))
 }
