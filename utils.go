@@ -10,28 +10,39 @@ import (
     "time"
 )
 
-type LogFlag string
+type LogFlag int
 
 const (
-    DEBUG LogFlag = "Debug"
-    INFO  LogFlag = "Info"
-    WARN  LogFlag = "Warn"
-    ERROR LogFlag = "Error"
+    DEBUG LogFlag = 1
+    INFO  LogFlag = 2
+    WARN  LogFlag = 3
+    ERROR LogFlag = 4
 )
 
-var logFlagMap = map[LogFlag]int{
+var logFlagTextMap = map[LogFlag]string{
+    DEBUG: "Debug",
+    INFO:  "Info",
+    WARN:  "Warn",
+    ERROR: "Error",
+}
+
+var logFlagCodeMap = map[LogFlag]int{
     DEBUG: 1,
     INFO:  2,
     WARN:  3,
     ERROR: 4,
 }
 
+func (lf LogFlag) Text() string {
+    return logFlagTextMap[lf]
+}
+
 func (lf LogFlag) Code() int {
-    return logFlagMap[lf]
+    return logFlagCodeMap[lf]
 }
 
 type AppLogger interface {
-    Log(flag string, v ...interface{})
+    Log(flag LogFlag, v ...interface{})
     Debug(v ...interface{})
     Info(v ...interface{})
     Warn(v ...interface{})
@@ -74,7 +85,7 @@ func NewLogger(loggerName string) AppLogger {
     return &logger
 }
 
-func (l *logger) Log(flag string, v ...interface{}) {
+func (l *logger) Log(flag LogFlag, v ...interface{}) {
     logs := make([]string, 0)
     for _, val := range v {
         logs = append(logs, fmt.Sprint(val))
@@ -86,28 +97,26 @@ func (l *logger) Log(flag string, v ...interface{}) {
     flagFile, _ := os.OpenFile(flagFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
     defer flagFile.Close()
 
-    flagEnum := LogFlag(flag)
-
     switch flag {
     case DEBUG:
-        if l.logLevel <= flagEnum.Code() {
+        if l.logLevel <= flag.Code() {
             l.doOutPut(l.DEBUG, flagFile, fmt.Sprintf("\t%s", logStr))
         }
     case ERROR:
-        if l.logLevel <= flagEnum.Code() {
+        if l.logLevel <= flag.Code() {
             l.doOutPut(l.ERROR, flagFile, fmt.Sprintf("\t%s", logStr))
         }
     case INFO:
-        if l.logLevel <= flagEnum.Code() {
+        if l.logLevel <= flag.Code() {
             l.doOutPut(l.INFO, flagFile, fmt.Sprintf("\t%s", logStr))
         }
     case WARN:
-        if l.logLevel <= flagEnum.Code() {
+        if l.logLevel <= flag.Code() {
             l.doOutPut(l.WARN, flagFile, fmt.Sprintf("\t%s", logStr))
         }
     default:
         tempLogger := log.Logger{}
-        tempLogger.SetPrefix(fmt.Sprintf("[%s]\t%s\t", l.loggerName, flag))
+        tempLogger.SetPrefix(fmt.Sprintf("[%s]\t%s\t", l.loggerName, flag.Text()))
         tempLogger.SetFlags(log.LstdFlags | log.Lmicroseconds)
         l.doOutPut(tempLogger, flagFile, fmt.Sprintf("\t%s", logStr))
     }
@@ -143,8 +152,8 @@ func checkDir(dirPath string) {
     }
 }
 
-func (l *logger) getFlagFilePath(flag string) string {
-    flagPath := fmt.Sprintf("%s/%s", l.filePath, strings.ToLower(flag))
+func (l *logger) getFlagFilePath(flag LogFlag) string {
+    flagPath := fmt.Sprintf("%s/%s", l.filePath, strings.ToLower(flag.Text()))
     checkDir(flagPath)
     flagFilePath := fmt.Sprintf("%s/%s.log", flagPath, l.fileDate)
     return flagFilePath
