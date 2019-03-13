@@ -1,4 +1,4 @@
-package logger
+package log
 
 import (
     "fmt"
@@ -10,39 +10,39 @@ import (
     "time"
 )
 
-type LogFlag int
+type Flag int
 
 const (
-    DEBUG LogFlag = 1
-    INFO  LogFlag = 2
-    WARN  LogFlag = 3
-    ERROR LogFlag = 4
+    DEBUG Flag = 1
+    INFO  Flag = 2
+    WARN  Flag = 3
+    ERROR Flag = 4
 )
 
-var logFlagTextMap = map[LogFlag]string{
+var flagTextMap = map[Flag]string{
     DEBUG: "Debug",
     INFO:  "Info",
     WARN:  "Warn",
     ERROR: "Error",
 }
 
-var logFlagCodeMap = map[LogFlag]int{
+var flagCodeMap = map[Flag]int{
     DEBUG: 1,
     INFO:  2,
     WARN:  3,
     ERROR: 4,
 }
 
-func (lf LogFlag) Text() string {
-    return logFlagTextMap[lf]
+func (lf Flag) Text() string {
+    return flagTextMap[lf]
 }
 
-func (lf LogFlag) Code() int {
-    return logFlagCodeMap[lf]
+func (lf Flag) Code() int {
+    return flagCodeMap[lf]
 }
 
 type AppLogger interface {
-    Log(flag LogFlag, v ...interface{})
+    Log(flag Flag, v ...interface{})
     Debug(v ...interface{})
     Info(v ...interface{})
     Warn(v ...interface{})
@@ -85,7 +85,7 @@ func NewLogger(loggerName string) AppLogger {
     return &logger
 }
 
-func (l *logger) Log(flag LogFlag, v ...interface{}) {
+func (l *logger) Log(flag Flag, v ...interface{}) {
     logs := make([]string, 0)
     for _, val := range v {
         logs = append(logs, fmt.Sprint(val))
@@ -152,7 +152,7 @@ func checkDir(dirPath string) {
     }
 }
 
-func (l *logger) getFlagFilePath(flag LogFlag) string {
+func (l *logger) getFlagFilePath(flag Flag) string {
     flagPath := fmt.Sprintf("%s/%s", l.filePath, strings.ToLower(flag.Text()))
     checkDir(flagPath)
     flagFilePath := fmt.Sprintf("%s/%s.log", flagPath, l.fileDate)
