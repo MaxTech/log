@@ -1,4 +1,4 @@
-package max_log
+package logger
 
 import (
     "fmt"

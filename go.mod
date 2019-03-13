@@ -1,3 +1,3 @@
-module github.com/maxtech/max-log
+module github.com/MaxTech/logger
 
 go 1.12
