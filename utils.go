@@ -6,6 +6,7 @@ import (
     "log"
     "os"
     "path/filepath"
+    "runtime"
     "strings"
     "time"
 )
@@ -44,9 +45,13 @@ func (lf Flag) Code() int {
 type AppLogger interface {
     Log(flag Flag, v ...interface{})
     Debug(v ...interface{})
+    HighQualityDebug(v ...interface{})
     Info(v ...interface{})
+    HighQualityInfo(v ...interface{})
     Warn(v ...interface{})
+    HighQualityWarn(v ...interface{})
     Error(v ...interface{})
+    HighQualityError(v ...interface{})
 }
 
 type logger struct {
@@ -126,7 +131,35 @@ func (l *logger) Debug(v ...interface{}) {
     l.Log(DEBUG, v...)
 }
 
+//HighQuality
+func (l *logger) HighQualityDebug(v ...interface{}) {
+    funcPtr, file, line, ok := runtime.Caller(1)
+    if ok {
+        funcName := runtime.FuncForPC(funcPtr).Name()
+        v = append(v, funcName)
+        v = append(v, file)
+        v = append(v, line)
+        l.Log(DEBUG, v...)
+        return
+    }
+    l.Log(DEBUG, v...)
+}
+
 func (l *logger) Info(v ...interface{}) {
+    l.Log(INFO, v...)
+}
+
+//HighQuality
+func (l *logger) HighQualityInfo(v ...interface{}) {
+    funcPtr, file, line, ok := runtime.Caller(1)
+    if ok {
+        funcName := runtime.FuncForPC(funcPtr).Name()
+        v = append(v, funcName)
+        v = append(v, file)
+        v = append(v, line)
+        l.Log(INFO, v...)
+        return
+    }
     l.Log(INFO, v...)
 }
 
@@ -134,7 +167,35 @@ func (l *logger) Warn(v ...interface{}) {
     l.Log(WARN, v...)
 }
 
+//HighQuality
+func (l *logger) HighQualityWarn(v ...interface{}) {
+    funcPtr, file, line, ok := runtime.Caller(1)
+    if ok {
+        funcName := runtime.FuncForPC(funcPtr).Name()
+        v = append(v, funcName)
+        v = append(v, file)
+        v = append(v, line)
+        l.Log(WARN, v...)
+        return
+    }
+    l.Log(WARN, v...)
+}
+
 func (l *logger) Error(v ...interface{}) {
+    l.Log(ERROR, v...)
+}
+
+//HighQuality
+func (l *logger) HighQualityError(v ...interface{}) {
+    funcPtr, file, line, ok := runtime.Caller(1)
+    if ok {
+        funcName := runtime.FuncForPC(funcPtr).Name()
+        v = append(v, funcName)
+        v = append(v, file)
+        v = append(v, line)
+        l.Log(ERROR, v...)
+        return
+    }
     l.Log(ERROR, v...)
 }
 
