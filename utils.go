@@ -34,24 +34,24 @@ var flagCodeMap = map[Flag]int{
     ERROR: 4,
 }
 
-func (lf Flag) Text() string {
-    return flagTextMap[lf]
+func (f Flag) Text() string {
+    return flagTextMap[f]
 }
 
-func (lf Flag) Code() int {
-    return flagCodeMap[lf]
+func (f Flag) Code() int {
+    return flagCodeMap[f]
 }
 
 type AppLogger interface {
-    Log(_flag Flag, _msg, _logPosition string, _v ...interface{})
-    Debug(_msg string, v ...interface{})
-    HighQualityDebug(_msg string, v ...interface{})
-    Info(_msg string, v ...interface{})
-    HighQualityInfo(_msg string, v ...interface{})
-    Warn(_msg string, v ...interface{})
-    HighQualityWarn(_msg string, v ...interface{})
-    Error(_msg string, v ...interface{})
-    HighQualityError(_msg string, v ...interface{})
+    Log(flag Flag, msg, logPosition string, v ...interface{})
+    Debug(msg string, v ...interface{})
+    HighQualityDebug(msg string, v ...interface{})
+    Info(msg string, v ...interface{})
+    HighQualityInfo(msg string, v ...interface{})
+    Warn(msg string, v ...interface{})
+    HighQualityWarn(msg string, v ...interface{})
+    Error(msg string, v ...interface{})
+    HighQualityError(msg string, v ...interface{})
 }
 
 type logger struct {
@@ -146,52 +146,52 @@ func (l *logger) HighQualityDebug(_msg string, _v ...interface{}) {
     l.Log(DEBUG, _msg, "",  _v...)
 }
 
-func (l *logger) Info(_msg string, v ...interface{}) {
-    l.Log(INFO, _msg, "", v...)
+func (l *logger) Info(_msg string, _v ...interface{}) {
+    l.Log(INFO, _msg, "", _v...)
 }
 
 //HighQuality
-func (l *logger) HighQualityInfo(_msg string, v ...interface{}) {
+func (l *logger) HighQualityInfo(_msg string, _v ...interface{}) {
     funcPtr, file, line, ok := runtime.Caller(1)
     if ok {
         funcName := runtime.FuncForPC(funcPtr).Name()
         logPosition := fmt.Sprintf("[funcName: %s, file: %s:%d]", funcName, file, line)
-        l.Log(INFO, _msg, logPosition, v...)
+        l.Log(INFO, _msg, logPosition, _v...)
         return
     }
-    l.Log(INFO, _msg, "", v...)
+    l.Log(INFO, _msg, "", _v...)
 }
 
-func (l *logger) Warn(_msg string, v ...interface{}) {
-    l.Log(WARN, _msg, "", v...)
+func (l *logger) Warn(_msg string, _v ...interface{}) {
+    l.Log(WARN, _msg, "", _v...)
 }
 
 //HighQuality
-func (l *logger) HighQualityWarn(_msg string, v ...interface{}) {
+func (l *logger) HighQualityWarn(_msg string, _v ...interface{}) {
     funcPtr, file, line, ok := runtime.Caller(1)
     if ok {
         funcName := runtime.FuncForPC(funcPtr).Name()
         logPosition := fmt.Sprintf("[funcName: %s, file: %s:%d]", funcName, file, line)
-        l.Log(WARN, _msg, logPosition, v...)
+        l.Log(WARN, _msg, logPosition, _v...)
         return
     }
-    l.Log(WARN, _msg, "", v...)
+    l.Log(WARN, _msg, "", _v...)
 }
 
-func (l *logger) Error(_msg string, v ...interface{}) {
-    l.Log(ERROR, _msg, "", v...)
+func (l *logger) Error(_msg string, _v ...interface{}) {
+    l.Log(ERROR, _msg, "", _v...)
 }
 
 //HighQuality
-func (l *logger) HighQualityError(_msg string, v ...interface{}) {
+func (l *logger) HighQualityError(_msg string, _v ...interface{}) {
     funcPtr, file, line, ok := runtime.Caller(1)
     if ok {
         funcName := runtime.FuncForPC(funcPtr).Name()
         logPosition := fmt.Sprintf("[funcName: %s, file: %s:%d]", funcName, file, line)
-        l.Log(ERROR, _msg, logPosition, v...)
+        l.Log(ERROR, _msg, logPosition, _v...)
         return
     }
-    l.Log(ERROR, _msg, "", v...)
+    l.Log(ERROR, _msg, "", _v...)
 }
 
 func (l *logger) updateFileDate() {
@@ -201,8 +201,8 @@ func (l *logger) updateFileDate() {
     }
 }
 
-func (l *logger) getFlagFilePath(flag Flag) string {
-    flagPath := fmt.Sprintf("%s/%s", l.filePath, strings.ToLower(flag.Text()))
+func (l *logger) getFlagFilePath(_flag Flag) string {
+    flagPath := fmt.Sprintf("%s/%s", l.filePath, strings.ToLower(_flag.Text()))
     _, err := os.Stat(flagPath)
     if err != nil && os.IsNotExist(err) {
         _ = os.MkdirAll(flagPath, os.ModePerm)
