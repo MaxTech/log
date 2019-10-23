@@ -91,14 +91,17 @@ func (l *logger) Log(_flag Flag, _msg, _logPosition string, _v ...interface{}) {
         logs = append(logs, _logPosition)
     }
     logs = append(logs, _msg)
+    
     if len(_v) == 1 {
         if vals, ok := _v[0].([]string); ok {
             logs = append(logs, vals...)
         }
+    } else {
+        for _, val := range _v {
+            logs = append(logs, fmt.Sprintf("%v: %v", reflect.TypeOf(val), val))
+        }
     }
-    for _, val := range _v {
-        logs = append(logs, fmt.Sprintf("%v: %v", reflect.TypeOf(val), val))
-    }
+    
     logStr := strings.Join(logs, "\t")
 
     l.updateFileDate()
