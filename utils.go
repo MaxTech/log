@@ -2,12 +2,14 @@ package log
 
 import (
     "fmt"
+    "io"
     "log"
     "os"
     "path/filepath"
     "reflect"
     "runtime"
     "strings"
+    "sync"
     "time"
 )
 
@@ -54,20 +56,53 @@ type AppLogger interface {
     HighQualityError(msg string, v ...interface{})
 }
 
+type fileWriter interface {
+    io.Writer
+    SetFilePath(path string)
+}
+
 type logger struct {
     loggerName string
     filePath   string
     fileDate   string
     logLevel   int
+    writer     fileWriter
     DEBUG      *log.Logger
     ERROR      *log.Logger
     INFO       *log.Logger
     WARN       *log.Logger
 }
 
+type loggerFileWriter struct {
+    mu       *sync.Mutex
+    filePath string
+}
+
+func (fw *loggerFileWriter) SetFilePath(_filePath string) {
+    fw.filePath = _filePath
+}
+
+func (fw *loggerFileWriter) Write(_data []byte) (int, error) {
+    fw.mu.Lock()
+    defer fw.mu.Unlock()
+
+    file, err := os.OpenFile(fw.filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
+    if err != nil {
+        _, _ = fmt.Fprintln(os.Stderr, err)
+        return 0, nil
+    }
+    defer file.Close()
+    return file.Write(_data)
+}
+
+func newFileWriter() fileWriter {
+    return &loggerFileWriter{mu: new(sync.Mutex)}
+}
+
 func NewLogger(_loggerName string) AppLogger {
     logger := logger{
         loggerName: _loggerName,
+        writer:     newFileWriter(),
     }
     logger.filePath, _ = filepath.Abs(fmt.Sprintf("./logs/%s", _loggerName))
     logger.updateFileDate()
@@ -98,40 +133,39 @@ func (l *logger) Log(_flag Flag, _msg, _logPosition string, _v ...interface{}) {
 
     l.updateFileDate()
     flagFilePath := l.getFlagFilePath(_flag)
-    flagFile, _ := os.OpenFile(flagFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
-    defer flagFile.Close()
+    l.writer.SetFilePath(flagFilePath)
 
     switch _flag {
     case DEBUG:
         if l.logLevel <= _flag.Code() {
-            l.DEBUG.SetOutput(flagFile)
+            l.DEBUG.SetOutput(l.writer)
             _ = l.DEBUG.Output(1, fmt.Sprintf("\t%s", logStr))
         }
     case ERROR:
         if l.logLevel <= _flag.Code() {
-            l.ERROR.SetOutput(flagFile)
+            l.ERROR.SetOutput(l.writer)
             _ = l.ERROR.Output(1, fmt.Sprintf("\t%s", logStr))
         }
     case INFO:
         if l.logLevel <= _flag.Code() {
-            l.INFO.SetOutput(flagFile)
+            l.INFO.SetOutput(l.writer)
             _ = l.INFO.Output(1, fmt.Sprintf("\t%s", logStr))
         }
     case WARN:
         if l.logLevel <= _flag.Code() {
-            l.WARN.SetOutput(flagFile)
+            l.WARN.SetOutput(l.writer)
             _ = l.WARN.Output(1, fmt.Sprintf("\t%s", logStr))
         }
     default:
         tempLogger := log.New(os.Stdout, fmt.Sprintf("[%s]\t[%s]\t", l.loggerName, "UNKNOWN"), ERROR.Code())
         tempLogger.SetFlags(log.LstdFlags | log.Lmicroseconds)
-        tempLogger.SetOutput(flagFile)
+        tempLogger.SetOutput(l.writer)
         _ = tempLogger.Output(1, fmt.Sprintf("\t%s", logStr))
     }
 }
 
 func (l *logger) Debug(_msg string, _v ...interface{}) {
-    l.Log(DEBUG, _msg, "",  _v...)
+    l.Log(DEBUG, _msg, "", _v...)
 }
 
 //HighQuality
@@ -143,7 +177,7 @@ func (l *logger) HighQualityDebug(_msg string, _v ...interface{}) {
         l.Log(DEBUG, _msg, logPosition, _v...)
         return
     }
-    l.Log(DEBUG, _msg, "",  _v...)
+    l.Log(DEBUG, _msg, "", _v...)
 }
 
 func (l *logger) Info(_msg string, _v ...interface{}) {
