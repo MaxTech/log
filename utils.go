@@ -56,7 +56,7 @@ type AppLogger interface {
     HighQualityError(msg string, v ...interface{})
 }
 
-type fileWriter interface {
+type mxWriter interface {
     io.Writer
     SetFilePath(path string)
 }
@@ -66,27 +66,27 @@ type logger struct {
     filePath   string
     fileDate   string
     logLevel   int
-    writer     fileWriter
+    writer     mxWriter
     DEBUG      *log.Logger
     ERROR      *log.Logger
     INFO       *log.Logger
     WARN       *log.Logger
 }
 
-type loggerFileWriter struct {
+type mxLoggerWriter struct {
     mu       *sync.Mutex
     filePath string
 }
 
-func (fw *loggerFileWriter) SetFilePath(_filePath string) {
-    fw.filePath = _filePath
+func (mlw *mxLoggerWriter) SetFilePath(_filePath string) {
+    mlw.filePath = _filePath
 }
 
-func (fw *loggerFileWriter) Write(_data []byte) (int, error) {
-    fw.mu.Lock()
-    defer fw.mu.Unlock()
+func (mlw *mxLoggerWriter) Write(_data []byte) (int, error) {
+    mlw.mu.Lock()
+    defer mlw.mu.Unlock()
 
-    file, err := os.OpenFile(fw.filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
+    file, err := os.OpenFile(mlw.filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
     if err != nil {
         _, _ = fmt.Fprintln(os.Stderr, err)
         return 0, nil
@@ -95,14 +95,14 @@ func (fw *loggerFileWriter) Write(_data []byte) (int, error) {
     return file.Write(_data)
 }
 
-func newFileWriter() fileWriter {
-    return &loggerFileWriter{mu: new(sync.Mutex)}
+func newMxWriter() mxWriter {
+    return &mxLoggerWriter{mu: new(sync.Mutex)}
 }
 
 func NewLogger(_loggerName string) AppLogger {
     logger := logger{
         loggerName: _loggerName,
-        writer:     newFileWriter(),
+        writer:     newMxWriter(),
     }
     logger.filePath, _ = filepath.Abs(fmt.Sprintf("./logs/%s", _loggerName))
     logger.updateFileDate()
@@ -128,8 +128,8 @@ func (l *logger) Log(_flag Flag, _msg, _logPosition string, _v ...interface{}) {
     logs = append(logs, _msg)
     
     if len(_v) == 1 {
-        if vals, ok := _v[0].([]string); ok {
-            logs = append(logs, vals...)
+        if values, ok := _v[0].([]string); ok {
+            logs = append(logs, values...)
         }
     } else {
         for _, val := range _v {
