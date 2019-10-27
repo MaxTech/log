@@ -249,6 +249,6 @@ func (l *logger) getFlagFilePath(_flag Flag) string {
     if err != nil && os.IsNotExist(err) {
         _ = os.MkdirAll(flagPath, os.ModePerm)
     }
-    flagFilePath := fmt.Sprintf("%s/%s.log", flagPath, l.fileDate)
+    flagFilePath := fmt.Sprintf("%s/%s_%s_%s.log", flagPath, strings.ToLower(l.loggerName), strings.ToLower(_flag.Text()), l.fileDate)
     return flagFilePath
 }
