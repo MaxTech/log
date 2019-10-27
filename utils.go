@@ -130,6 +130,8 @@ func (l *logger) Log(_flag Flag, _msg, _logPosition string, _v ...interface{}) {
     if len(_v) == 1 {
         if values, ok := _v[0].([]string); ok {
             logs = append(logs, values...)
+        } else {
+            logs = append(logs, fmt.Sprintf("%v: %v", reflect.TypeOf(_v), _v))
         }
     } else {
         for _, val := range _v {
