@@ -95,13 +95,20 @@ func newMxWriter() mxWriter {
     return &mxLoggerWriter{mu: new(sync.Mutex)}
 }
 
-func NewLogger(_loggerName string) AppLogger {
+func NewLogger(_logPath, _loggerName string) AppLogger {
     logger := logger{
         loggerName: _loggerName,
         writer:     newMxWriter(),
         callDepth: 3,
     }
-    logger.filePath, _ = filepath.Abs(fmt.Sprintf("./logs/%s", _loggerName))
+    if len(_logPath) < 1 {
+        _logPath = "./logs"
+    }
+    logPath, err := filepath.Abs(_logPath)
+    if err != nil {
+        log.Fatal("log path error:", err)
+    }
+    logger.filePath = fmt.Sprintf("%s/%s", logPath, _loggerName)
     logger.updateFileDate()
 
     logger.DEBUG = log.New(nil, fmt.Sprintf("[%s]\t[%s]\t", _loggerName, DEBUG.Text()), DEBUG.Code())
